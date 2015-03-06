@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html ng-app='app'>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>order</title>
+	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+	<script src="bower_components/lodash/lodash.js"></script>
+	<script src="bower_components/jquery/dist/jquery.js"></script>
+	<script src="bower_components/angular/angular.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+	<style>
+		body {padding:30px; padding-top: 10px;}
+		header { text-align: center; height:75px; background:plum;}
+	</style>
+</head>
+<body ng-controller="ctrl" class="container-fluid">
+<div class="row">
+	<div class="col-sm-4">
+		<table style="min-width: 300px;">
+			<th>Name</th><th>Shipping Addr</th>
+		<tr ng-repeat="cust in custs">
+			<td><label><input type="radio" ng-model="newOrder.cust" value="{{$index}}">{{cust.name}}</label></td>
+			<td><select ng-model="cust.shipAddr" ng-options="addr.street for addr in cust.addrs"></select></td>
+		</tr>
+		</table>
+		Order Total: {{newOrder.total|currency}}
+	</div>
+	<div class="col-sm-offset-2 col-sm-4">
+		<table style="min-width: 300px;">
+			<th>Name</th><th>Price</th><th>Quantity</th>
+			<tr ng-repeat="item in items">
+				<td><label><input type="checkbox" ng-model="$parent.items[$index].checked" ng-click="calcTotal()" value="{{cust}}">{{item.name}}</label></td>
+				<td>{{item.price|currency}}</td>
+				<td><input ng-model="item.quantity" ng-change="calcTotal()" style="width:40px" maxlength="4"></td>
+			</tr>
+		</table>
+	</div>
+
+</div>
+<button ng-click="addOrder()">Add Order</button><br>
+<h3 style="color:green;">{{message}}</h3>
+
+
+<hr>
+	<table class="table">
+		<thead><th>Date</th><th>Cust</th><th>Addr</th><th>Total</th><th></th></thead>
+		<tr ng-repeat="order in orders">
+			<td>{{order.date}}</td>
+			<td>{{order.cust.name}}</td>
+			<td>{{order.shipAddr}}</td>
+			<td>{{order.total|currency}}</td>
+			<td>
+				<a href="" ng-click="edit(order)">edit</a>
+				<a href="" ng-click="remove(order)">del</a>
+			</td>
+		</tr>
+	</table>
+	<form ng-submit="update(order)">
+		_id: {{order._id}}<br>
+		date: {{order.date.toString()}}<br>
+		cust: {{order.cust.name}}<br>
+		total: {{order.total}}<br>
+		<h4>Items</h4>
+		<table style="min-width: 400px">
+			<th>Name</th><th>Price</th><th>Quantity</th><th>Total</th><th></th>
+			<tr ng-repeat="item in order.items">
+				<td>{{item.name}}</td>
+				<td>{{item.price|currency}}</td>
+				<td><input ng-model="$parent.order.items[$index].quantity"></td>
+				<td>{{(order.total = (item.price * order.items[$index].quantity).toFixed(2))|currency}}</td>
+				<td><a href="" ng-click="itemDelete(item)">del</a></td>
+			</tr>
+		</table>
+		<br>
+		<button type="submit">Update</button>
+		<button type="button" ng-click="order = {}">Reset</button><br>
+	</form>
+<hr>
+
+<script>
+	var app = angular.module('app', []);
+	app.factory('$cust', function($http) {
+		return {
+			get: function() {
+				return $http.get('api/cust').then(function(resp) {
+					return resp.data;
+				})
+			}
+		}
+	});
+
+	app.factory('$item', function($http) {
+		return {
+			get: function() {
+				return $http.get('api/item').then(function(resp) {
+					return resp.data;
+				})
+			}
+		}
+	});
+
+	app.factory('$order', function($http) {
+		return {
+			get: function() {
+				return $http.get('api/order')
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			getOne: function(order) {
+				return $http.get('api/order/' + order._id)
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			insert: function(order) {
+				return $http.post('api/order', order)
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			update: function(order) {
+				return $http.put('api/order', order)
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			remove: function(order) {
+				return $http.delete('api/order/' + order._id)
+						.then(function(resp) {
+							return resp.data;
+						})
+			}
+		}
+	})
+	app.controller('ctrl', function($scope, $timeout, $order, $item, $cust){
+
+		$scope.newOrder = {};
+
+		$scope.calcTotal = function() {
+			var total = 0;
+			$scope.items.forEach(function(v) {
+				if(v.checked)
+					total += v.price * (v.quantity? +v.quantity: 0);
+			})
+			$scope.newOrder.total = total;
+		}
+
+		$scope.edit = function(order) {
+			$scope.order = _.clone(order);
+		}
+
+		$scope.insert = function(order) {
+			$order.insert(order).then(function(doc) {
+				$scope.message = 'Order created';
+				$timeout(function() {
+					$scope.message = '';
+				}, 1000)
+				$scope.order = {};
+				refresh();
+			})
+		}
+		$scope.addOrder = function() {
+			var order = {
+				cust: $scope.custs[$scope.newOrder.cust]._id,
+				//date: new Date, set default instead
+				total: $scope.newOrder.total,
+				shipAddr: $scope.custs[$scope.newOrder.cust].shipAddr,
+				items: []
+			}
+			$scope.items.forEach(function(v) {
+				var quantity = +v.quantity;
+				if(v.checked && quantity && !_.isNaN(quantity)  && quantity > 0)
+					order.items.push(v);
+			})
+			$scope.insert(order);
+		}
+
+		function refresh() {
+			$order.get().then(function(orders) {
+				$scope.orders = orders;
+			});
+		}
+
+		$scope.select = function(order) {
+			$order.getOne(order).then(function(doc) {
+				$scope.order = doc;
+			})
+		}
+
+
+		$scope.update = function(order) {
+			order.cust = order.cust._id;
+			$order.update(order).then(function(doc) {
+				refresh();
+			})
+		}
+
+		$scope.remove = function(order) {
+			$order.remove(order).then(function() {
+				refresh();
+			})
+		}
+
+		refresh();
+		$cust.get().then(function(custs) {
+			$scope.custs = custs;
+		});
+		$item.get().then(function(items) {
+			$scope.items = items;
+		});
+	})
+</script>
+</body>
+</html>

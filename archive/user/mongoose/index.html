@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html ng-app='app'>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>angBootRoute</title>
+	<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+	<script src="bower_components/lodash/lodash.js"></script>
+	<script src="bower_components/jquery/dist/jquery.js"></script>
+	<script src="bower_components/angular/angular.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+	<style>
+		body {padding:30px;}
+		header { text-align: center; height:75px; background:plum;}
+	</style>
+</head>
+<body ng-controller="ctrl">
+<table class="table">
+	<thead><th>Name</th><th>Age</th><th></th></thead>
+	<tr ng-repeat="user in users">
+		<td>
+			<span ng-if="!user.edit" ng-bind="user.name"></span>
+			<input ng-if="user.edit" ng-model="user.name">
+		</td>
+		<td>
+			<span ng-if="!user.edit" ng-bind="user.age"></span>
+			<input ng-if="user.edit" ng-model="user.age">
+		</td>
+		<td>
+			<a href="" ng-if="!user.edit" ng-click="user.edit=true">edit</a>
+			<a href="" ng-if="user.edit" ng-click="cancel()">cancel</a>
+			<a href="" ng-if="user.edit" ng-click="update(user)">save</a>
+			<a href="" ng-click="remove(user)">del</a>
+			<a href="" ng-click="select(user)">sel</a>
+		</td>
+	</tr>
+</table>
+<form ng-submit="insert(user)">
+	_id: <input ng-model="user._id" readonly><br>
+	name: <input ng-model="user.name"><br>
+	age: <input ng-model="user.age"><br>
+	<button type="submit">Add</button>
+	<button type="button" ng-click="user = {}">Reset</button><br>
+
+</form>
+
+<script>
+	var app = angular.module('app', []);
+	app.factory('$user', function($http) {
+		return {
+			get: function() {
+				return $http.get('api/user')
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			getOne: function(user) {
+				return $http.get('api/user/' + user._id)
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			insert: function(user) {
+				return $http.post('api/user', user)
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			update: function(user) {
+				return $http.put('api/user', user)
+						.then(function(resp) {
+							return resp.data;
+						})
+			},
+			remove: function(user) {
+				return $http.delete('api/user/' + user._id)
+						.then(function(resp) {
+							return resp.data;
+						})
+			}
+		}
+	})
+	app.controller('ctrl', function($scope, $user){
+
+		function refresh() {
+			$user.get().then(function(users) {
+				$scope.users = users;
+			});
+		}
+
+		$scope.select = function(user) {
+			$user.getOne(user).then(function(doc) {
+				$scope.user = doc;
+			})
+		}
+
+		$scope.cancel = function() {
+			refresh();
+		}
+
+		$scope.insert = function(user) {
+			$user.insert(user).then(function(doc) {
+				$scope.user = {};
+				refresh();
+				//$scope.users[$scope.users.indexOf(user)] = doc;
+			})
+		}
+
+		$scope.update = function(user) {
+			$user.update(user).then(function(doc) {
+				refresh();
+				//$scope.users[$scope.users.indexOf(user)] = doc;
+			})
+		}
+
+		$scope.remove = function(user) {
+			$user.remove(user).then(function() {
+				refresh();
+			})
+		}
+
+		refresh();
+	})
+</script>
+</body>
+</html>
