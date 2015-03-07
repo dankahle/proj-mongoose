@@ -1,24 +1,17 @@
 
 
-var newValue;
+var async = require('async'),
+	fs = require('fs')
 
-newValue = ''
-console.log('empty',newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'false'
-console.log('false', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'False'
-console.log('False', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = '0'
-console.log('0', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'true'
-console.log('true', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'True'
-console.log('True', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'andything'
-console.log('anything', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'tooltip'
-console.log('tooltip', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = '1'
-console.log('1', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
-newValue = 'true,tooltip'
-console.log('true,tooltis', newValue = !!(newValue.match(/true|,?(tooltip),?/i)))
+
+var i;
+
+function test(val, cb) {
+	cb(null, val*2);
+}
+var fcn = async.memoize(test);
+
+for(var i = 0; i < 3; i++)
+	fcn(i+1, function(val){return val*2});
+
+console.log(fcn.memo)

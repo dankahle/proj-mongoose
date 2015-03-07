@@ -146,8 +146,10 @@
 			$scope.newOrder.total = total;
 		}
 
-		$scope.edit = function(order) {
-			$scope.order = _.clone(order);
+		$scope.edit = function(_order) {
+			$order.getOne(_order).then(function(order) {
+				$scope.order = order
+			})
 		}
 
 		$scope.insert = function(order) {
