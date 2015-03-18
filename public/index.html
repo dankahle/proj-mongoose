@@ -38,7 +38,6 @@
 
 </div>
 <button ng-click="addOrder()">Add Order</button><br>
-<h3 style="color:green;">{{message}}</h3>
 
 
 <hr>
@@ -154,10 +153,6 @@
 
 		$scope.insert = function(order) {
 			$order.insert(order).then(function(doc) {
-				$scope.message = 'Order created';
-				$timeout(function() {
-					$scope.message = '';
-				}, 1000)
 				$scope.order = {};
 				refresh();
 			})

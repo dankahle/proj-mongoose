@@ -1,9 +1,17 @@
 
 
+todo
+
+* does findbyid throw error when not found?
+
+
+
 /// order 
-cust(name) with subdoc array addr(street city)
-item(name, price, quantity)
-order(cust(pop), date, total, shipAddr, items(pop)
+Cust(name String, addrs [Addr]) 
+Addr(street: String, city: String, active: Boolean)
+Order(cust_id ref Cust(pop), orderDate Date, total Number, shipAddr Addr, items[Item]
+Item(name String, price Number, quantity Number)
+
 
 UI
 ///cust page

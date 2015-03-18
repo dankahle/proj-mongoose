@@ -1,17 +1,26 @@
+var mongodb = require('mongodb'),
+	MongoClient = mongodb.MongoClient,
+	ObjectId = mongodb.ObjectId,
+	_ = require('lodash')
 
+var db, Custs, Items, Orders;
 
-var async = require('async'),
-	fs = require('fs')
-
-
-var i;
-
-function test(val, cb) {
-	cb(null, val*2);
+function out(err, val) {
+	if(err) return console.error(err);
+	console.log(val)
 }
-var fcn = async.memoize(test);
 
-for(var i = 0; i < 3; i++)
-	fcn(i+1, function(val){return val*2});
+MongoClient.connect('mongodb://localhost:27017/dbn', function (err, db) {
+	if (err) def.reject("Failed to connect to database.")
+	db = db;
+	Custs = db.collection('custs');
+	Items = db.collection('items');
+	Orders = db.collection('orders');
 
-console.log(fcn.memo)
+
+	db.command({ping:1},out)
+
+
+});
+
+

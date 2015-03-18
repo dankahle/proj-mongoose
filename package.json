@@ -11,5 +11,9 @@
   "dependencies": {
     "lodash": "^3.3.0",
     "moment": "^2.9.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-mocha": "^2.0.0"
   }
 }
